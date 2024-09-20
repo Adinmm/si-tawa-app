@@ -10,6 +10,7 @@ import FooterLogin from "../../components/loginregistcomp/FooterLogin";
 
 import AddPopUp from "../../components/UserComponents/AddPopUp";
 
+
 const pengaduan = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedImage, setSelectedImage] = useState("");
@@ -26,10 +27,16 @@ const pengaduan = () => {
   const [subject, setSubject] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [phone_number, setPhone_number] = useState<string>("");
-  
-  const [latitude, setLatitude] = useState<number>(0);
-  const [longitude, setLongitude] = useState<number>(0);
+
+  const [latitude, setLatitude] = useState<string>("");
+  const [longitude, setLongitude] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+
+  const [toggleInput, setToggleInput] = useState<boolean>(false);
+
+  // ---------- random name for image -------
+
+  // ---------- random name for image -------
 
   const getLocation = () => {
     if (navigator.geolocation) {
@@ -38,8 +45,8 @@ const pengaduan = () => {
         (position) => {
           const { latitude, longitude } = position.coords;
           fetchAddress(latitude, longitude);
-          setLatitude(latitude);
-          setLongitude(longitude);
+          setLatitude(latitude.toString());
+          setLongitude(longitude.toString());
         },
         (error) => {
           console.error("Error getting location:", error);
@@ -86,7 +93,7 @@ const pengaduan = () => {
       setFile(file);
       const imageUrl = URL.createObjectURL(file);
       setSelectedImage(imageUrl);
-      
+
       setImageName(file.name);
       setImageSize(file.size);
     }
@@ -116,13 +123,12 @@ const pengaduan = () => {
 
     try {
       const { data, error } = await supabase.storage
-        .from("images").upload(`public/${file.name}`, file);
+        .from("images")
+        .upload(`public/${file.name}`, file);
 
       if (error) {
         console.log("Error uploading image:", error);
         throw error;
-        ;
-
       }
 
       // Mendapatkan URL publik untuk gambar yang baru diupload
@@ -139,11 +145,11 @@ const pengaduan = () => {
       setUploading(false);
     }
   };
-
   // add Data
   const addPengaduan = async (e: any) => {
+   
+    
     e.preventDefault();
-
     console.log("Mulai proses tambah pengaduan");
 
     if (
@@ -154,37 +160,30 @@ const pengaduan = () => {
       !subject ||
       !description
     ) {
+      setToggleInput(!toggleInput);
+
       alert("Lengkapi semua data");
       return;
     }
-    const currentTimestamp = new Date();
+    
+    const formData = new FormData();
+      formData.append('name', name);
+      formData.append('phone', phone_number);
+      formData.append('address', address);
+      formData.append('subject', subject);
+      formData.append('description', description);
+      formData.append('latitude', latitude);
+      formData.append('longitude', longitude);
+
+      if (file) {
+        formData.append('image', file);
+      }
     try {
-      console.log("Sebelum mengirim data ke Supabase");
-
-      const { data, error } = await supabase.from("complaints").insert([
-        {
-          name,
-          phone_number,
-          address,
-          photo:imageUrl,
-          subject,
-          description,
-          updated_at: currentTimestamp,
-          created_at: currentTimestamp,
-          latitude,
-          longitude,
-        },
-      ]);
-
-      console.log("Setelah mengirim data ke Supabase");
       
 
-      if (error) {
-        console.log("Error dari Supabase:", error);
-        return;
-      }
-
-      console.log("Data berhasil ditambahkan:", data);
+      console.log("Sebelum mengirim data ke Supabase");
+      
+      await axios.post('http://localhost:8000/api/complaints', formData);
 
       // Reset fields
       setNmae("");
@@ -198,6 +197,8 @@ const pengaduan = () => {
       console.error("Error saat menambahkan pengaduan:", error);
       alert("Terjadi kesalahan saat menambahkan pengaduan. Silakan coba lagi.");
     }
+
+   
   };
 
   return (
@@ -216,18 +217,27 @@ const pengaduan = () => {
         <div>
           <AddPopUp />
         </div>
-        <div className="flex justify-center overflow-auto scrollbar-hide">
-          <div className="w-[1230px]   border border-[#f0f0f0] rounded-xl shadow-xl my-32">
+        <div className="flex justify-center overflow-auto scrollbar-hide relative">
+          <div className="tabel-pengaduan w-[76.875rem]   border border-[#f0f0f0] rounded-xl shadow-xl my-32">
             <div className="py-[49px] border-b border-[#f0f0f0] mx-1">
-              <p className="ml-5">Buat Pengaduan</p>
+              <p className="buat-pengaduan ml-5">Buat Pengaduan</p>
             </div>
             <form onSubmit={addPengaduan} className="w-full" action="">
               <div className="flex justify-center items-center text-[12px]">
                 <div className="mt-5">
-                  <label className="ml-5 " htmlFor="">
-                    Nama
-                  </label>
-                  <div className="w-[950px] h-[42px] border border-[#f0f0f0] rounded-xl flex justify-center items-center mt-2">
+                  <div className="flex w-full  relative">
+                    <label className="ml-5 " htmlFor="">
+                      Nama
+                    </label>
+                    <p
+                      className={`p absolute right-0 mr-5 text-red-600 ${
+                        toggleInput && name === "" ? "block" : "hidden"
+                      }`}
+                    >
+                      *Field tidak boleh kosong
+                    </p>
+                  </div>
+                  <div className="input-pengaduan w-[950px] h-[42px] border border-[#f0f0f0] rounded-xl flex justify-center items-center mt-2">
                     <input
                       onChange={(e) => setNmae(e.target.value)}
                       value={name}
@@ -239,25 +249,44 @@ const pengaduan = () => {
               </div>
               <div className="flex justify-center items-center text-[12px]">
                 <div className="mt-5">
-                  <label className="ml-5 " htmlFor="">
-                    No HP
-                  </label>
-                  <div className="w-[950px] h-[42px] border border-[#f0f0f0] rounded-xl flex justify-center items-center mt-2">
+                  <div className="flex w-full  relative">
+                    <label className="ml-5 " htmlFor="">
+                      No HP
+                    </label>
+                    <p
+                      className={`p absolute right-0 mr-5 text-red-600 ${
+                        toggleInput && phone_number === "" ? "block" : "hidden"
+                      }`}
+                    >
+                      *Field tidak boleh kosong
+                    </p>
+                  </div>
+                  <div className="input-pengaduan w-[950px] h-[42px] border border-[#f0f0f0] rounded-xl flex justify-center items-center mt-2">
                     <input
                       onChange={(e) => setPhone_number(e.target.value)}
                       value={phone_number}
-                      className="w-[920px] h-[35px] outline-none "
-                      type="tel"
+                      className="w-[920px] h-[35px] outline-none appearance-none custom-input"
+                      type="number"
                     />
                   </div>
                 </div>
               </div>
               <div className="flex justify-center items-center text-[12px]">
                 <div className="mt-5">
-                  <label className="ml-5 " htmlFor="">
-                    Alamat
-                  </label>
-                  <div className="w-[950px] h-[42px] border border-[#f0f0f0] rounded-xl flex justify-center items-center mt-2">
+                  <div className="flex w-full  relative">
+                    <label className="ml-5 " htmlFor="">
+                      Alamat
+                    </label>
+                    <p
+                      className={`p absolute right-0 mr-5 text-red-600 ${
+                        toggleInput && address === "" ? "block" : "hidden"
+                      }`}
+                    >
+                      *Field tidak boleh kosong
+                    </p>
+                  </div>
+
+                  <div className="input-pengaduan w-[950px] h-[42px] border border-[#f0f0f0] rounded-xl flex justify-center items-center mt-2">
                     <input
                       onChange={(e) => setAddress(e.target.value)}
                       value={address}
@@ -269,7 +298,7 @@ const pengaduan = () => {
                     <button
                       onClick={getLocation}
                       disabled={loading}
-                      className={`py-1 px-2 rounded-lg  bg-custom-gradient text-white ${
+                      className={`lokasi-text py-1 px-2 rounded-lg  bg-custom-gradient text-white ${
                         loading ? "hidden" : ""
                       }`}
                     >
@@ -281,13 +310,13 @@ const pengaduan = () => {
                       }`}
                     >
                       <div className="loader"></div>
-                      <p>Sedang Mencari Lokasi</p>
+                      <p className="p">Sedang Mencari Lokasi</p>
                     </div>
                   </div>
                 </div>
               </div>
               <div className="flex justify-center mt-5">
-                <div className="w-[950px] h-[316px] border border-[#f0f0f0] rounded-xl flex justify-center items-center mt-2">
+                <div className="input-pengaduan w-[950px] h-[316px] border border-[#f0f0f0] rounded-xl flex justify-center items-center mt-2">
                   <div>
                     <div
                       onClick={() => handleIconClick()}
@@ -306,7 +335,7 @@ const pengaduan = () => {
                         type="file"
                       />
                     </div>
-                    <p className="text-center text-[12px]">
+                    <p className="p text-center text-[12px]">
                       Anda dapat seret dan lepas berkas di sini untuk
                       menambahkan foto
                     </p>
@@ -316,17 +345,21 @@ const pengaduan = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex justify-center mt-5 ">
-                <div className="border border-[#f0f0f0] rounded-xl w-[950px] h-[116px]">
+              <div
+                className={`flex justify-center mt-5 ${
+                  imageName === "" ? "hidden" : ""
+                } `}
+              >
+                <div className="input-pengaduan border border-[#f0f0f0] rounded-xl w-[950px] h-[80px] relative flex items-center">
                   {selectedImage && (
-                    <div className="p-3 flex  gap-2 items-center">
+                    <div className="img-upload px-3 flex  gap-2 items-center">
                       <img
                         src={selectedImage}
                         alt="Selected"
-                        className="h-[48px] w-[54px] object-cover rounded-sm"
+                        className="h-[54px] w-[54px] object-cover rounded-md"
                       />
                       <div>
-                        <p className="text-[12px] mb-1 text-black">
+                        <p className="p text-[12px] mb-1 text-black">
                           {imageName}
                         </p>
                         <p className="text-[8px]">
@@ -336,19 +369,24 @@ const pengaduan = () => {
                     </div>
                   )}
 
-                  <div className="px-3">
-                    <button className="border px-2 py-1 rounded-lg text-[12px]" onClick={handleUpload} disabled={uploading}>
-                      {uploading ? "Uploading..." : "Upload"}
-                    </button>
-                  </div>
+                  
                 </div>
               </div>
               <div className="flex justify-center items-center text-[12px]">
                 <div className="mt-5">
-                  <label className="ml-5 " htmlFor="">
-                    Subjek
-                  </label>
-                  <div className="w-[950px] h-[42px] border border-[#f0f0f0] rounded-xl flex justify-center items-center mt-2">
+                  <div className="flex w-full  relative">
+                    <label className="ml-5 " htmlFor="">
+                      Subjek
+                    </label>
+                    <p
+                      className={`p absolute right-0 mr-5 text-red-600 ${
+                        toggleInput && subject === "" ? "block" : "hidden"
+                      }`}
+                    >
+                      *Field tidak boleh kosong
+                    </p>
+                  </div>
+                  <div className="input-pengaduan w-[950px] h-[42px] border border-[#f0f0f0] rounded-xl flex justify-center items-center mt-2">
                     <input
                       onChange={(e) => setSubject(e.target.value)}
                       value={subject}
@@ -360,10 +398,19 @@ const pengaduan = () => {
               </div>
               <div className="flex justify-center items-center text-[12px]">
                 <div className="mt-5">
-                  <label className="ml-5 " htmlFor="">
-                    Keterangan
-                  </label>
-                  <div className="w-[950px] h-[222px] border border-[#f0f0f0] rounded-xl flex justify-center items-center mt-2">
+                  <div className="flex w-full  relative">
+                    <label className="ml-5 " htmlFor="">
+                      Keterangan
+                    </label>
+                    <p
+                      className={`p absolute right-0 mr-5 text-red-600 ${
+                        toggleInput && description === "" ? "block" : "hidden"
+                      }`}
+                    >
+                      *Field tidak boleh kosong
+                    </p>
+                  </div>
+                  <div className="input-pengaduan w-[950px] h-[222px] border border-[#f0f0f0] rounded-xl flex justify-center items-center mt-2">
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
@@ -377,7 +424,7 @@ const pengaduan = () => {
               <div className="flex justify-center items-center pb-10 mt-5">
                 <button
                   type="submit"
-                  className="px-24 py-2 rounded-lg bg-[#9BEC00] text-white"
+                  className="btn-send px-24 py-2 rounded-lg bg-[#9BEC00] text-white"
                 >
                   Kirim
                 </button>

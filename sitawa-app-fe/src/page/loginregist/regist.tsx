@@ -1,26 +1,45 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from "react";
 import imglogin from "../../assets/photos/WhatsApp Image 2024-08-21 at 12.37.39.jpeg";
-import NavLogin from '../../components/loginregistcomp/NavLogin';
-import FooterLogin from '../../components/loginregistcomp/FooterLogin';
-import logo from '../../assets/logo/sumbawa.jpeg';
-import { formRegist, formUser } from '../../data/data';
-
+import { supabase } from "../../api/supabaseClient";
+import FooterLogin from "../../components/loginregistcomp/FooterLogin";
+import logo from "../../assets/logo/sumbawa.jpeg";
+import { formRegist, formUser } from "../../data/data";
 
 const regist = () => {
-    const [color, setColor] = useState(2);
+  const [color, setColor] = useState<number | null>(null);
+  const [name, setName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [checkPassword, setCheckPassword] = useState<string>("");
+  const handleRegister = async() => {
+    try {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([{  name, email, phone, password }]);
+
+      if (profileError) {
+        throw new Error(profileError.message); // Melempar error jika ada kesalahan saat menyimpan profil
+      }
+      alert("Registrasi Berhasil");
+
+      // Redirect user setelah berhasil register
+     
+    } catch (error: any) {
+      // Menangani error jika terjadi
+      throw new Error(error.message); // Menyimpan pesan error di state
+    }
+    
+
+  };
   return (
     <div className="h-[100vh] ">
-      <NavLogin />
-      <div>
-
-      </div>
+      <div></div>
       <div className="h-full w-full  flex justify-center items-center">
         <div className="w-[1044px] h-[599px] border border-[#F0F0F0] flex shadow-xl rounded-xl">
           <div className="form-user w-[522px] border-r">
-            <h1 className="text-center text-[24px] text-black mt-14">
-              Daftar
-            </h1>
-            <form className="w-full mt-5" action="post">
+            <h1 className="text-center text-[24px] text-black mt-14">Daftar</h1>
+            <form className="w-full mt-5">
               <div className="flex justify-center">
                 <div>
                   {formRegist.map((data, index) => {
@@ -38,19 +57,30 @@ const regist = () => {
                           {data.label}
                         </label>
                         <div
-                          className={`w-[433px] h-[34px] border rounded-full flex ${
+                          className={`w-[433px] h-[44px] border rounded-full flex ${
                             color == index && "border-[#9BEC00]"
                           } items-center`}
                         >
                           <input
-                            className="w-[334px] h-[32px] ml-[46px] outline-none  "
+                            onChange={
+                              index == 0
+                                ? (e) => setName(e.target.value)
+                                : index == 1
+                                ? (e) => setEmail(e.target.value)
+                                : index == 2
+                                ? (e) => setPhone(e.target.value)
+                                : index == 3
+                                ? (e) => setPassword(e.target.value)
+                                : (e) => setCheckPassword(e.target.value)
+                            }
+                            className="custom-input w-[334px] h-[32px] ml-[46px] outline-none  "
                             type={data.type}
                           />
                         </div>
                       </div>
                     );
                   })}
-                  
+
                   <button className="w-full h-[34px] rounded-xl border bg-custom-gradient text-white mt-5">
                     Daftar
                   </button>
@@ -61,6 +91,7 @@ const regist = () => {
                 </div>
               </div>
             </form>
+            <p onClick={handleRegister}>p</p>
           </div>
           <div className="img-form relative">
             <div className=" right-[12.5rem] mt-2 absolute flex gap-2 items-center ">
@@ -75,9 +106,9 @@ const regist = () => {
           </div>
         </div>
       </div>
-      <FooterLogin/>
+      <FooterLogin />
     </div>
-  )
-}
+  );
+};
 
-export default regist
+export default regist;

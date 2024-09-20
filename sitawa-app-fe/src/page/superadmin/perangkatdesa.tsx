@@ -1,11 +1,12 @@
 import { useContext } from "react";
 import { GlobalContext } from "../../GlobalContext";
 import PerangkatSidebar from "../../components/sidebarComponents/PerangkatSidebar";
-import PerangkatDesa from "../../components/PerangkatDesa";
+
 import Navbar from "../../components/Navbar";
 import PopUpPerangkat from "../../components/SuperAdminComponents/PopUpPerangkat";
+import ComponentPerangkat from "../../components/componentPerangkat";
 
-const perangkatdesa = () => {
+const PerangkatDesa = () => {
   const context = useContext(GlobalContext);
   if (!context) {
     console.error("Global context not found");
@@ -45,7 +46,7 @@ const perangkatdesa = () => {
                   </p>
                 </div>
               </div>
-              <PerangkatDesa />
+              <ComponentPerangkat/>
               <div className="pb-10"></div>
             </div>
           </div>
@@ -56,4 +57,4 @@ const perangkatdesa = () => {
   );
 };
 
-export default perangkatdesa;
+export default PerangkatDesa;

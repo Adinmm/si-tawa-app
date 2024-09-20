@@ -1,7 +1,7 @@
 import {  useNavigate } from "react-router-dom";
 import TabelPerangkatDesa from "./TabelPerangkatDesa";
 
-const PerangkatDesa = () => {
+const ComponentPerangkat = () => {
   const navigate = useNavigate()
   return (
     <div>
@@ -75,5 +75,4 @@ const PerangkatDesa = () => {
     </div>
   );
 };
-
-export default PerangkatDesa;
+export default ComponentPerangkat;

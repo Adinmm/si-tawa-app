@@ -7,7 +7,7 @@ import ExitPopup from "../../components/SuperAdminComponents/ExitPopUp";
 import { GlobalContext } from "../../GlobalContext";
 import { useContext } from "react";
 
-const beranda = () => {
+const Beranda = () => {
   const context = useContext(GlobalContext);
   if (!context) {
     throw new Error("context not found");
@@ -41,7 +41,7 @@ const beranda = () => {
                     Accounts
                   </p>
                   <p className="border-l-[1px] border-[#858585] pl-2">
-                    Muhammad Muayyadin
+                    Superadmin
                   </p>
                 </div>
               </div>
@@ -85,4 +85,4 @@ const beranda = () => {
     </div>
   );
 };
-export default beranda;
+export default Beranda;

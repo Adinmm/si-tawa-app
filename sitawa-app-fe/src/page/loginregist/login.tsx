@@ -4,21 +4,68 @@ import imglogin from "../../assets/photos/WhatsApp Image 2024-08-21 at 12.37.39.
 import { formUser } from "../../data/data";
 import logo from "../../assets/logo/sumbawa.jpeg";
 import FooterLogin from "../../components/loginregistcomp/FooterLogin";
+import { supabase } from "../../api/supabaseClient";
+import { useAuth } from "../../auth/AuthContext";
+import { Navigate, useNavigate } from "react-router-dom";
 const login = () => {
-  const [color, setColor] = useState(2);
+  const navigate = useNavigate();
+  const { setUserRole } = useAuth();
+  const [color, setColor] = useState<number | null>(null);
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const fetchUserRole = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching role:", error.message);
+      return null;
+    }
+
+    return data.role;
+  };
+  const handleLogin = async (e:any) => {
+    e.preventDefault();
+    console.log("click");
+    
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("email", email)
+        .single();
+
+      if (error) {
+        console.error("Error fetching role:", error.message);
+        return null;
+      }
+      alert("Login Berhasil");
+
+      setUserRole(data.role);
+      if (data.role == "admin") {
+        navigate("/beranda");
+      } else {
+        navigate("/");
+      }
+    } catch (error) {
+      console.error("Error signing in:", error);
+    }
+  };
+
   return (
     <div className="h-[100vh] ">
       <NavLogin />
-      <div>
-
-      </div>
+      <div></div>
       <div className="h-full w-full  flex justify-center items-center">
         <div className="w-[1044px] h-[599px] border border-[#F0F0F0] flex shadow-xl rounded-xl">
           <div className="form-user w-[522px] border-r">
             <h1 className="text-center text-[24px] text-black mt-[71px]">
               Masuk
             </h1>
-            <form className="w-full mt-[78px]" action="post">
+            <form onSubmit={handleLogin} className="w-full mt-[78px]">
               <div className="flex justify-center">
                 <div>
                   {formUser.map((data, index) => {
@@ -41,6 +88,11 @@ const login = () => {
                           } items-center`}
                         >
                           <input
+                            onChange={
+                              index == 0
+                                ? (e) => setEmail(e.target.value)
+                                : (e) => setPassword(e.target.value)
+                            }
                             className="w-[334px] h-[32px] ml-[46px] outline-none  "
                             type={data.type}
                           />
@@ -51,7 +103,10 @@ const login = () => {
                   <div className="flex justify-end">
                     <button className="text-[#9BEC00]">Lupa Password ?</button>
                   </div>
-                  <button className="w-full h-[34px] rounded-xl border bg-custom-gradient text-white mt-5">
+                  <button
+                    onClick={handleLogin}
+                    className="w-full h-[34px] rounded-xl border bg-custom-gradient text-white mt-5"
+                  >
                     Masuk
                   </button>
                   <div className="w-full flex justify-center gap-2 mt-2">
@@ -75,7 +130,7 @@ const login = () => {
           </div>
         </div>
       </div>
-      <FooterLogin/>
+      <FooterLogin />
     </div>
   );
 };
